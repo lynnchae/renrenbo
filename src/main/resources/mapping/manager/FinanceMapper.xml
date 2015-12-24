@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="finance">
+
+    <!--查詢提现列表-->
+    <select id="getWithdrawCashList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.entity.WithdrawCash">
+        select a.id,b.nickName,a.receiptNumber,a.alipayAccount,a.type,a.cashNum,a.status,a.reason,FROM_UNIXTIME(a.createTime,'%Y-%m-%d %H:%i:%s') as createTime from withdrawCash a
+        left join accountInfo b on a.accountID = b.accountID
+        where a.isValid = #{isValid} and b.isValid = #{isValid}
+        <if test="userName != null"> and <![CDATA[ b.nickName like '%${userName}%']]></if>
+        <if test="receiptNumber != null"> and a.receiptNumber = #{receiptNumber} </if>
+        <if test="alipayAccount != null">and a.alipayAccount = #{alipayAccount}</if>
+        ORDER by a.createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--查詢提现列表总数-->
+    <select id="getWithdrawCashNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(a.id) from withdrawCash a
+        left join accountInfo b on a.accountID = b.accountID
+        where a.isValid = #{isValid} and b.isValid = #{isValid}
+        <if test="userName != null"> and <![CDATA[ b.nickName like '%${userName}%']]></if>
+        <if test="tradeNumber != null"> and a.tradeNumber = #{tradeNumber} </if>
+        <if test="alipayAccount != null">and a.alipayAccount = #{alipayAccount}</if>
+    </select>
+
+    <!--根据用户ID查詢提现列表信息-->
+    <select id="getPresentDetailsList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.entity.WithdrawCash">
+        select id,alipayAccount,receiptNumber,type,cashNum,status,createTime,reason from withdrawCash
+        where isValid=#{isValid} and status=1
+        <if test="accountID != null"> and accountID = #{accountID} </if>
+        ORDER by createTime DESC
+    </select>
+
+    <!--根据用户ID查詢提现列表信息总数-->
+    <select id="getPresentDetailsNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from withdrawCash
+        where isValid=#{isValid} and status=1
+        <if test="accountID != null"> and accountID = #{accountID} </if>
+    </select>
+
+    <!--查詢提现用户信息列表-->
+    <select id="getPresentUserList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.vo.PresentUserInfo">
+        select a.id,a.accountID,a.nickName,a.realName,b.wealthVal,b.diamond,sum(c.cashNum) as waitMoney,a.mobile from accountInfo a
+        left join myWallet b on a.accountID=b.accountID
+        left join withdrawCash c on a.accountID=c.accountID
+        where a.isValid=1 and b.isValid=1 and c.isValid=1 and c.status=1
+        <if test="nickName != null"> and <![CDATA[ a.nickName like '%${nickName}%']]></if>
+        <if test="realName != null"> and a.realName = #{realName} </if>
+        <if test="mobile != null">and a.mobile = #{mobile}</if>
+        group by c.accountID
+        ORDER by a.createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--查詢提现用户信息总数-->
+    <select id="getPresentUserNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (
+            select a.id,a.accountID,a.nickName,a.realName,b.wealthVal,b.diamond,sum(c.cashNum) as waitMoney,a.mobile from accountInfo a
+            left join myWallet b on a.accountID=b.accountID
+            left join withdrawCash c on a.accountID=c.accountID
+            where a.isValid=1 and b.isValid=1 and c.isValid=1 and c.status=1
+            <if test="nickName != null"> and <![CDATA[ a.nickName like '%${nickName}%']]></if>
+            <if test="realName != null"> and a.realName = #{realName} </if>
+            <if test="mobile != null">and a.mobile = #{mobile}</if>
+            group by a.accountID
+        ) a
+    </select>
+
+    <!--更新提现表状态-->
+    <update id="updatWithdrawCashOfStatus" parameterType="java.util.Map">
+        UPDATE withdrawCash
+        <set>
+            <if test="status != null"> status = #{status}, </if>
+            <if test="reason != null"> reason = #{reason}, </if>
+            <if test="receiptNumber != null"> receiptNumber = #{receiptNumber}, </if>
+            updateTime = #{updateTime}
+        </set>
+        WHERE id = #{id} and status = 1
+    </update>
+
+    <!--根据ID查詢提现列表-->
+    <select id="getWithdrawCashById" parameterType="java.util.Map" resultType="java.util.Map">
+        select id,accountID,tradeNumber,alipayAccount,type,cashNum,status,FROM_UNIXTIME(createTime,'%Y-%m-%d') as createTime from withdrawCash
+        where isValid = #{isValid} and id = #{id}
+    </select>
+
+    <update id="updateAnchorDiamond" parameterType="java.util.Map">
+        UPDATE myWallet SET diamond = #{diamond},updateTime = #{updateTime}
+    </update>
+
+    <!--修改主播的密点数-->
+    <update id="updateDiamond"  parameterType="java.util.Map">
+        update myWallet set diamond = diamond + #{diamond},updateTime=#{updateTime} where accountID = #{accountID} and isValid = #{isValid}
+    </update>
+
+    <!--根据ID查询主播的AccountID-->
+    <select id="getAccountInfoOfAccountID" parameterType="java.util.Map" resultType="java.lang.String">
+        select accountID from accountInfo where id=#{id} and isValid = #{isValid};
+    </select>
+</mapper>

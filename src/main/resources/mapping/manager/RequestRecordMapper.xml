@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="requestRecord">
+
+    <!--人人播查询当前天、周、月新增的留存率
+    <select id="getRetentionRateRrb" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*)
+        <set>
+            <if test="#{key} == 'day'.toString()">
+                from (select accountID from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),date_sub(curdate(),interval 1 day)) = 0 and app = 0 group by accountID) aa
+                where aa.accountID in (select accountID from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),now()) = 0 and app = 0 group by accountID);
+            </if>
+            <if test="#{key} == 'week'.toString()">
+                from (select accountID from requestRecord where createTime between DATE_SUB(date_sub(now(),interval 1 WEEK),INTERVAL WEEKDAY(date_sub(now(),interval 1 WEEK)) day) and DATE_ADD(date_sub(now(),interval 1 WEEK), interval 6 day) and app = 0 group by accountID) aa
+                where aa.accountID in (select accountID from requestRecord where createTime between DATE_SUB(now(),INTERVAL WEEKDAY(now()) day) and DATE_ADD(now(), interval 6 day) and app = 0 group by accountID);
+            </if>
+            <if test="#{key} == 'month'.toString()">
+                from (select accountID from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),date_sub(now(),interval 1 month)) = 0 and app = 0 group by accountID) aa
+                where aa.accountID in (select accountID from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),now()) = 0 and app = 0 group by accountID);
+            </if>
+        </set>
+    </select>-->
+
+    <!--人人播查询当前天、周、月新增的留存率（天）-->
+    <select id="getRetentionRateRrbDay" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (select accountID from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),date_sub(curdate(),interval 1 day)) = 0 and app = 0 group by accountID) aa
+        where aa.accountID in (select accountID from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),now()) = 0 and app = 0 group by accountID);
+    </select>
+
+    <!--人人播查询当前天、周、月新增的留存率（周）-->
+    <select id="getRetentionRateRrbWeek" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (select accountID from requestRecord where createTime between DATE_SUB(date_sub(now(),interval 1 WEEK),INTERVAL WEEKDAY(date_sub(now(),interval 1 WEEK)) day) and DATE_ADD(date_sub(now(),interval 1 WEEK), interval 6 day) and app = 0 group by accountID) aa
+        where aa.accountID in (select accountID from requestRecord where createTime between DATE_SUB(now(),INTERVAL WEEKDAY(now()) day) and DATE_ADD(now(), interval 6 day) and app = 0 group by accountID);
+    </select>
+
+    <!--人人播查询当前天、周、月新增的留存率（月）-->
+    <select id="getRetentionRateRrbMonth" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (select accountID from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),date_sub(now(),interval 1 month)) = 0 and app = 0 group by accountID) aa
+        where aa.accountID in (select accountID from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),now()) = 0 and app = 0 group by accountID);
+    </select>
+
+    <!--FM查询当前天、周、月新增的留存率(用户的ID)
+    <select id="getRetentionRateAiFm" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*)
+        <set>
+            <if test="#{key} == 'day'.toString()">
+                from (select accountID from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),date_sub(curdate(),interval 1 day)) = 0 and app = 1 group by accountID) aa
+                where aa.accountID in (select accountID from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),now()) = 0 and app = 1 group by accountID);
+            </if>
+            <if test="#{key} == 'week'.toString()">
+                from (select accountID from requestRecord where createTime between DATE_SUB(date_sub(now(),interval 1 WEEK),INTERVAL WEEKDAY(date_sub(now(),interval 1 WEEK)) day) and DATE_ADD(date_sub(now(),interval 1 WEEK), interval 6 day) and app = 1 group by accountID) aa
+                where aa.accountID in (select accountID from requestRecord where createTime between DATE_SUB(now(),INTERVAL WEEKDAY(now()) day) and DATE_ADD(now(), interval 6 day) and app = 1 group by accountID);
+            </if>
+            <if test="#{key} == 'month'.toString()">
+                from (select accountID from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),date_sub(now(),interval 1 month)) = 0 and app = 1 group by accountID) aa
+                where aa.accountID in (select accountID from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),now()) = 0 and app = 1 group by accountID);
+            </if>
+        </set>
+    </select>-->
+
+    <!--FM查询当前天、周、月新增的留存率(用户的ID)(天)-->
+    <select id="getRetentionRateAiFmDay" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (select accountID from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),date_sub(curdate(),interval 1 day)) = 0 and app = 1 group by accountID) aa
+        where aa.accountID in (select accountID from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),now()) = 0 and app = 1 group by accountID);
+    </select>
+
+    <!--FM查询当前天、周、月新增的留存率(用户的ID)(周)-->
+    <select id="getRetentionRateAiFmWeek" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (select accountID from requestRecord where createTime between DATE_SUB(date_sub(now(),interval 1 WEEK),INTERVAL WEEKDAY(date_sub(now(),interval 1 WEEK)) day) and DATE_ADD(date_sub(now(),interval 1 WEEK), interval 6 day) and app = 1 group by accountID) aa
+        where aa.accountID in (select accountID from requestRecord where createTime between DATE_SUB(now(),INTERVAL WEEKDAY(now()) day) and DATE_ADD(now(), interval 6 day) and app = 1 group by accountID);
+    </select>
+
+    <!--FM查询当前天、周、月新增的留存率(用户的ID)(月)-->
+    <select id="getRetentionRateAiFmMonth" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (select accountID from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),date_sub(now(),interval 1 month)) = 0 and app = 1 group by accountID) aa
+        where aa.accountID in (select accountID from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),now()) = 0 and app = 1 group by accountID);
+    </select>
+
+    <!--FM查询当前天、周、月新增的留存率(手机的唯一标示码)
+    <select id="getRetentionRatePcFm" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*)
+        <set>
+            <if test="#{key} == 'day'.toString()">
+                from (select phoneCode from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),date_sub(curdate(),interval 1 day)) = 0 and app = 1 group by phoneCode) aa
+                where aa.phoneCode in (select phoneCode from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),now()) = 0 and app = 1 group by phoneCode);
+            </if>
+            <if test="#{key} == 'week'.toString()">
+                from (select phoneCode from requestRecord where createTime between DATE_SUB(date_sub(now(),interval 1 WEEK),INTERVAL WEEKDAY(date_sub(now(),interval 1 WEEK)) day) and DATE_ADD(date_sub(now(),interval 1 WEEK), interval 6 day) and app = 1 group by phoneCode) aa
+                where aa.phoneCode in (select phoneCode from requestRecord where createTime between DATE_SUB(now(),INTERVAL WEEKDAY(now()) day) and DATE_ADD(now(), interval 6 day) and app = 1 group by phoneCode);
+            </if>
+            <if test="#{key} == 'month'.toString()">
+                from (select phoneCode from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),date_sub(now(),interval 1 month)) = 0 and app = 1 group by phoneCode) aa
+                where aa.phoneCode in (select phoneCode from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),now()) = 0 and app = 1 group by phoneCode);
+            </if>
+        </set>
+    </select>-->
+
+    <!--FM查询当前天、周、月新增的留存率(手机的唯一标示码)(天)-->
+    <select id="getRetentionRatePcFmDay" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (select phoneCode from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),date_sub(curdate(),interval 1 day)) = 0 and app = 1 group by phoneCode) aa
+        where aa.phoneCode in (select phoneCode from requestRecord where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),now()) = 0 and app = 1 group by phoneCode);
+    </select>
+
+    <!--FM查询当前天、周、月新增的留存率(手机的唯一标示码)(周)-->
+    <select id="getRetentionRatePcFmWeek" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (select phoneCode from requestRecord where createTime between DATE_SUB(date_sub(now(),interval 1 WEEK),INTERVAL WEEKDAY(date_sub(now(),interval 1 WEEK)) day) and DATE_ADD(date_sub(now(),interval 1 WEEK), interval 6 day) and app = 1 group by phoneCode) aa
+        where aa.phoneCode in (select phoneCode from requestRecord where createTime between DATE_SUB(now(),INTERVAL WEEKDAY(now()) day) and DATE_ADD(now(), interval 6 day) and app = 1 group by phoneCode);
+    </select>
+
+    <!--FM查询当前天、周、月新增的留存率(手机的唯一标示码)(月)-->
+    <select id="getRetentionRatePcFmMonth" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (select phoneCode from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),date_sub(now(),interval 1 month)) = 0 and app = 1 group by phoneCode) aa
+        where aa.phoneCode in (select phoneCode from requestRecord where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),now()) = 0 and app = 1 group by phoneCode);
+    </select>
+
+    <!--人人播查询当前天、周、月活跃的用户数
+    <select id="getActiveUserRrb" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from requestRecord
+        <set>
+            <if test="#{key} == 'day'.toString()">
+            <if test='#{key} == "day"'>
+                where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),now()) = 0 and app = 0 group by accountID;
+            </if>
+            <if test="#{key} == 'week'.toString()">
+            <if test='#{key} == "week"'>
+                where createTime between DATE_SUB(now(),INTERVAL WEEKDAY(now()) day) and DATE_ADD(now(), interval 6 day) and app = 0 group by accountID;
+            </if>
+            <if test="#{key} == 'month'.toString()">
+            <if test='#{key} == "month"'>
+                where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),now()) = 0 and app = 0 group by accountID;
+            </if>
+        </set>
+    </select>-->
+
+    <!--人人播查询当前天、周、月活跃的用户数（天）-->
+    <select id="getActiveUserRrbDay" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from requestRecord where DAYOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = DAYOFYEAR(now()) and app = 0 group by accountID;
+    </select>
+
+    <!--人人播查询当前天、周、月活跃的用户数（周）-->
+    <select id="getActiveUserRrbWeek" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from requestRecord where WEEKOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = WEEKOFYEAR(now()) and app = 0 group by accountID;
+    </select>
+
+    <!--人人播查询当前天、周、月活跃的用户数（月）-->
+    <select id="getActiveUserRrbMonth" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from requestRecord where MONTH(FROM_UNIXTIME(createTime,'%y-%m-%d')) = MONTH(now()) and app = 0 group by accountID;
+    </select>
+
+    <!--FM查询当前天、周、月活跃的用户数
+    <select id="getActiveUserFm" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from requestRecord
+        <set>
+            <if test="#{key} == 'day'.toString()">
+                where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),now()) = 0 and app = 1 group by accountID;
+            </if>
+            <if test="#{key} == 'week'.toString()">
+                where createTime between DATE_SUB(now(),INTERVAL WEEKDAY(now()) day) and DATE_ADD(now(), interval 6 day) and app = 1 group by accountID;
+            </if>
+            <if test="#{key} == 'month'.toString()">
+                where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),now()) = 0 and app = 1 group by accountID;
+            </if>
+        </set>
+    </select>-->
+
+    <!--FM查询当前天、周、月活跃的用户数(天)-->
+    <select id="getActiveUserFmDay" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from requestRecord where DAYOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = DAYOFYEAR(now()) and app = 1 group by accountID;
+    </select>
+
+    <!--FM查询当前天、周、月活跃的用户数(周)-->
+    <select id="getActiveUserFmWeek" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from requestRecord where WEEKOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = WEEKOFYEAR(now()) and app = 1 group by accountID;
+    </select>
+
+    <!--FM查询当前天、周、月活跃的用户数(月)-->
+    <select id="getActiveUserFmMonth" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from requestRecord where MONTH(FROM_UNIXTIME(createTime,'%y-%m-%d')) = MONTH(now()) and app = 1 group by accountID;
+    </select>
+
+</mapper>

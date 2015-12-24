@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="me.daoke.renrenfm.vo.PrizeInfo">
+
+	<!--查詢prizeInfo列表-->
+	<select id="getPrizeInfoList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.vo.PrizeInfo">
+		SELECT id,name,icon,description,isValid,collectWealthVal,giveWealthVal,prizeCode,FROM_UNIXTIME(createTime,'%Y-%m-%d %H:%i:%s') as createTime
+		FROM prizeInfo WHERE isValid=#{isValid}
+		<if test="name != null">and <![CDATA[ name like '%${name}%']]></if>
+		ORDER by createTime DESC limit #{startPlace},#{size}
+	</select>
+
+	<!--查詢presentInfo列表总数-->
+	<select id="getPrizeInfoNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+		SELECT count(id)
+		from prizeInfo WHERE isValid=#{isValid}
+		<if test="name != null">and <![CDATA[ name like '%${name}%']]></if>
+	</select>
+
+	<!--查询奖品是否还在箱子中，并返回奖品编码-->
+	<select id="isExistInBox" parameterType="java.util.Map" resultType="java.lang.String">
+		SELECT GROUP_CONCAT(prizeCode) from (
+		SELECT prizeCode from mappingBoxPrize where isValid=#{isValid} AND prizeCode in (
+		SELECT prizeCode from prizeInfo where isValid=#{isValid} AND id in
+		<foreach item="item" index="index" collection="prizeIDs"
+				 open="(" separator="," close=")">
+			#{item}
+		</foreach>
+		) GROUP BY prizeCode
+		)A
+	</select>
+	<!--删除prizeInfo信息-->
+	<update id="deletePrizeInfo" parameterType="java.util.Map">
+		UPDATE prizeInfo
+		SET isValid=#{isValid},updateTime=#{updateTime}
+		WHERE id in
+		<foreach item="item" index="index" collection="prizeIDs"
+				 open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<!--修改prizeInfo信息-->
+	<update id="updatePrizeInfo">
+		UPDATE prizeInfo
+		<set>
+			<if test="name != null">name=#{name},</if>
+			<if test="icon != null">icon=#{icon},</if>
+			<if test="denseNum != null">denseNum=#{denseNum},</if>
+			<if test="description != null">description=#{description},</if>
+			<if test="collectWealthVal != null">collectWealthVal=#{collectWealthVal},</if>
+			<if test="giveWealthVal != null">giveWealthVal=#{giveWealthVal},</if>
+			updateTime=#{updateTime}
+		</set>
+		WHERE id=#{prizeID}
+	</update>
+
+	<!--查询奖品的编码是否存在-->
+	<select id="getPrizeCode" parameterType="java.util.Map" resultType="java.lang.Integer">
+		SELECT count(id) from prizeInfo WHERE prizeCode=#{prizeCode} and isValid=#{isValid}
+	</select>
+
+	<!--新增-->
+	<update id="addPrizeInfo" parameterType="java.util.Map">
+		INSERT INTO prizeInfo(prizeCode,name,icon,description,createTime,updateTime,isValid,collectWealthVal,giveWealthVal,inventory)
+		VALUES (#{prizeCode},#{name},#{icon},#{description},#{createTime},#{updateTime},#{isValid},#{collectWealthVal},#{giveWealthVal},#{inventory});
+	</update>
+
+	<!--根据盒子ID查询盒子中的奖品-->
+	<select id="getPrizeInfoInBox" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT m.id,m.percent,p.name,p.icon,p.denseNum,p.prizeCode from mappingBoxPrize m
+		LEFT JOIN prizeInfo p on p.prizeCode = m.prizeCode
+		LEFT JOIN prizeBox b on b.boxCode = m.boxCode
+		WHERE b.id =#{boxID} and p.isValid=#{isValid} and m.isValid=#{isValid} and b.isValid=#{isValid}
+		ORDER BY m.id DESC
+	</select>
+
+	<select id="getPrizeInfoNotInBox" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT * FROM prizeInfo WHERE prizeCode NOT IN (
+			SELECT prizeCode from mappingBoxPrize WHERE boxCode=#{boxCode} AND isValid=#{isValid}
+		) AND isValid=#{isValid}
+	</select>
+
+	<select id="getPrizeInfoById" parameterType="java.util.Map" resultType="me.daoke.renrenfm.vo.PrizeInfo">
+		SELECT id,name,icon,denseNum,description,isValid,collectWealthVal,giveWealthVal,prizeCode,FROM_UNIXTIME(createTime,'%Y-%m-%d %H:%i:%s') as createTime
+		FROM prizeInfo WHERE isValid=#{isValid} AND ID=#{prizeID}
+	</select>
+
+</mapper>

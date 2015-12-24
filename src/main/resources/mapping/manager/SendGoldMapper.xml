@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="sendGold">
+
+    <!--查詢送金币记录-->
+    <select id="sendGoldList" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT s.ID,s.receiptorMobile as mobile,receiptorGoldNum as goldNum,a.nickName as anchorName,s.isCollect,s.type,FROM_UNIXTIME(s.createTime,'%Y-%m-%d %H:%i:%s') as createTime
+        from sendGoldEvent s
+        LEFT JOIN accountInfo a on a.accountID = s.recommendAccountID
+        WHERE s.isValid = #{isValid}
+        <if test="mobile != null">and <![CDATA[ s.receiptorMobile like '%${mobile}%']]></if>
+        <if test="isCollect != null">and s.isCollect=#{isCollect}</if>
+        ORDER BY s.createTime desc limit #{startPlace},#{size}
+    </select>
+
+    <!--查詢送金币记录总数-->
+    <select id="sendGoldListNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT count(*)
+        from sendGoldEvent s
+        LEFT JOIN accountInfo a on a.accountID = s.recommendAccountID
+        WHERE s.isValid = #{isValid}
+        <if test="mobile != null">and <![CDATA[ s.receiptorMobile like '%${mobile}%']]></if>
+        <if test="isCollect != null">and s.isCollect=#{isCollect}</if>
+    </select>
+
+    <!--查詢返回微密用户的密点数的记录-->
+    <select id="getDenseInfoList" parameterType="java.util.Map" resultType="java.util.Map">
+        select s.id,s.receiptorMobile as mobile,count(*) as vioceNum,s.denseStatus,FROM_UNIXTIME(s.createTime,'%Y-%m-%d %H:%i:%s') as createTime
+        from sendGoldEvent s
+        left join listenerAccountInfo la on s.receiptorMobile=la.mobile
+        left join listenerReceiveVoice lv on la.accountID=lv.senderAccountID
+        where s.isValid=1 and la.isValid=1 and lv.isValid=1
+        <if test="mobile != null">and <![CDATA[ s.receiptorMobile like '%${mobile}%']]></if>
+        <if test="denseStatus != null">and s.denseStatus=#{denseStatus}</if>
+        group by s.receiptorMobile
+        ORDER BY s.createTime desc limit #{startPlace},#{size}
+    </select>
+
+    <!--查詢返回微密用户的密点数的记录条数-->
+    <select id="getDenseInfoListNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from
+        select s.id,s.receiptorMobile as mobile,count(*) as vioceNum,s.denseStatus,FROM_UNIXTIME(s.createTime,'%Y-%m-%d %H:%i:%s') as createTime
+        from sendGoldEvent s
+        left join listenerAccountInfo la on s.receiptorMobile=la.mobile
+        left join listenerReceiveVoice lv on la.accountID=lv.senderAccountID
+        where s.isValid=1 and la.isValid=1 and lv.isValid=1
+        <if test="mobile != null">and <![CDATA[ s.receiptorMobile like '%${mobile}%']]></if>
+        <if test="denseStatus != null">and s.denseStatus=#{denseStatus}</if>
+        group by s.receiptorMobile ) a
+    </select>
+
+    <!--更新返回微密用户密点数的状态-->
+    <update id="updateSendGoldEventIsDenseStatus" parameterType="java.util.Map">
+        UPDATE sendGoldEvent
+        <set>
+            <if test="denseStatus != null"> denseStatus = #{denseStatus}, </if>
+            updateTime = #{updateTime}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>

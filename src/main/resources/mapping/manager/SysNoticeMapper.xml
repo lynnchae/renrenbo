@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--系统公告-->
+<mapper namespace="me.daoke.renrenfm.entity.SysNotice">
+
+	<!--查询所有的系统公告-->
+	<select id="queryAllNotice" resultType="me.daoke.renrenfm.entity.SysNotice">
+		select
+		    id,title,brief,icon,type,url,showOrder,FROM_UNIXTIME(createTime,'%Y-%m-%d %H:%i:%s')
+		from
+		    sysNotice
+		where
+		    isValid = 1 ORDER BY  showNum asc,createTime asc
+	</select>
+
+	<!--根据ID查询最新的系统公告-->
+	<select id="querySysNoticeByRemark" resultType="me.daoke.renrenfm.entity.SysNotice" parameterType="map">
+		select
+			id,title,brief,icon,type,url,showOrder,FROM_UNIXTIME(createTime,'%Y-%m-%d %H:%i:%s'),remark
+		from
+			sysNotice
+		where
+			isValid = 1 and remark = #{remark} order by createTime DESC  limit 0,1
+	</select>
+
+	<!--新增系统公告内容-->
+	<insert id="addSysNotice" parameterType="map">
+		INSERT into sysNotice(title,brief,icon,type,url,showOrder,createTime,updateTime,isValid)
+		values (#{title},#{brief},#{icon},#{type},#{url},#{showOrder},#{createTime},#{updateTime},#{isValid},#{reamrk})
+	</insert>
+
+	<!--修改指定的系统公告-->
+	<update id="updateSysNoticeByID" parameterType="map">
+		update sysNotice set updateTime = #{updateTime}
+		<if test="title != null">,title = #{title}</if>
+		<if test="brief != null">,brief = #{brief}</if>
+		<if test="icon != null">,icon = #{icon}</if>
+		<if test="url != null">,url = #{url}</if>
+		where remark = #{remark}
+	</update>
+
+</mapper>

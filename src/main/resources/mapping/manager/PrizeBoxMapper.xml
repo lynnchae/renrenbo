@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="me.daoke.renrenfm.vo.PrizeBox">
+
+	<!--查詢box列表-->
+	<select id="getPrizeBoxList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.vo.PrizeBox">
+		SELECT id,boxCode,boxName,boxImg,denseNum,isValid,FROM_UNIXTIME(createTime,'%Y-%m-%d %H:%i:%s') as createTime
+		FROM prizeBox WHERE isValid=#{isValid}
+		<if test="boxName != null">and <![CDATA[ boxName like '%${boxName}%']]></if>
+		ORDER by createTime DESC limit #{startPlace},#{size}
+	</select>
+
+	<!--查詢box数量-->
+	<select id="getPrizeBoxNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+		SELECT count(id)
+		FROM prizeBox WHERE isValid=#{isValid}
+		<if test="boxName != null">and <![CDATA[ boxName like '%${boxName}%']]></if>
+	</select>
+
+	<!--查询箱子中是否有奖品，并返回箱子编码-->
+	<select id="isExistPrize" parameterType="java.util.Map" resultType="java.lang.String">
+		SELECT GROUP_CONCAT(boxCode) from (
+			SELECT boxCode from mappingBoxPrize where isValid=#{isValid} AND boxCode in (
+				SELECT boxCode from prizeBox where isValid=#{isValid} AND id in
+				<foreach item="item" index="index" collection="boxIDs"
+				 	open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			) GROUP BY boxCode
+		)A
+	</select>
+
+	<!--删除prizeBox信息-->
+	<update id="deletePrizeBox" parameterType="java.util.Map">
+		UPDATE prizeBox
+		SET isValid=#{isValid},updateTime=#{updateTime}
+		WHERE id in
+		<foreach item="item" index="index" collection="boxIDs"
+				 open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<update id="addPrizeBox" parameterType="java.util.Map">
+		INSERT INTO prizeBox(boxCode,boxName,boxImg,denseNum,isValid,createTime,updateTime)
+		VALUES (#{boxCode},#{boxName},#{boxImg},#{denseNum},#{isValid},#{createTime},#{updateTime});
+	</update>
+
+	<!--查询箱子的编码是否存在-->
+	<select id="judgeBoxCodeIsExist" parameterType="java.util.Map" resultType="java.lang.Integer">
+		SELECT count(id) from prizeBox WHERE boxCode=#{boxCode} and isValid=#{isValid}
+	</select>
+
+	<select id="queryBoxByID" parameterType="java.util.Map" resultType="me.daoke.renrenfm.vo.PrizeBox">
+		SELECT id,boxCode,boxName,boxImg,denseNum,isValid,FROM_UNIXTIME(createTime,'%Y-%m-%d %H:%i:%s') as createTime
+		FROM prizeBox WHERE isValid=#{isValid} and id=#{boxId}
+	</select>
+
+	<!--删除箱子中的奖品-->
+	<update id="deletePrizeInBox" parameterType="java.util.Map">
+		UPDATE mappingBoxPrize
+		SET isValid=#{isValid},updateTime=#{updateTime}
+		WHERE id in
+		<foreach item="item" index="index" collection="mappingIds"
+				 open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<!--往箱子中添加奖品-->
+	<update id="addPrize2Box" parameterType="java.util.Map">
+		INSERT INTO mappingBoxPrize(boxCode,prizeCode,percent,isValid,createTime,updateTime)
+		VALUES (#{boxCode},#{prizeCode},#{percent},#{isValid},#{createTime},#{updateTime});
+	</update>
+
+	<!--修改奖品百分比-->
+	<update id="editPrizePercent" parameterType="java.util.Map">
+		UPDATE mappingBoxPrize SET percent=#{percent},updateTime=#{updateTime} where id=#{mappingId}
+	</update>
+
+</mapper>

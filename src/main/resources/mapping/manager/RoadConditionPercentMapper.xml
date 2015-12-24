@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="me.daoke.renrenfm.entity.RoadConditionPercent">
+
+	<select id="queryInfo" resultType="me.daoke.renrenfm.entity.RoadConditionPercent">
+		select * from  roadConditionPercent where isValid = 1 order by createTime desc limit 0,1
+	</select>
+
+	<update id="updateInfo" parameterType="Map">
+		update roadConditionPercent set slowPercent = #{slowPercent},crowPercent=#{crowPercent}
+		where isValid = 1
+	</update>
+
+</mapper>

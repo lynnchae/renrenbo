@@ -1,0 +1,623 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="me.daoke.renrenfm.vo.AccountInfo">
+
+    <!--查詢AccountInfo列表-->
+    <select id="getAccountInfoList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.vo.AccountInfo">
+        select a.id,a.accountID,a.nickName,a.remark,a.realName,a.headPic,a.idCard,a.mobile,a.sex,a.isVoice,c.diamond,c.diamondWealthVal,
+        FROM_UNIXTIME(a.createTime,'%Y-%m-%d %H:%i:%s') as createTime,a.status,b.cityName,count(d.id) as popularityVal from accountInfo a
+        LEFT JOIN attentionCity b on a.accountID = b.accountID
+        LEFT JOIN myWallet c on a.accountID = c.accountID
+        LEFT JOIN attentionAnchor d on a.accountID = d.anchorAccountID
+        where a.isValid = #{isValid} and b.isValid = #{isValid} and c.isValid = #{isValid} and d.isValid = #{isValid}
+        <if test="anchorStatus != null"> and a.status = #{anchorStatus} </if>
+        <if test="mobile != null"> and a.mobile = #{mobile} </if>
+        <if test="cityName != null">and <![CDATA[ b.cityName like '%${cityName}%']]></if>
+        group by d.anchorAccountID
+        ORDER by a.createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--查詢AccountInfo列表总数-->
+    <select id="getAccountInfoNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT count(*) from (
+        SELECT count(a.id) from accountInfo a
+        LEFT JOIN attentionCity b on a.accountID = b.accountID
+        LEFT JOIN myWallet c on a.accountID = c.accountID
+        LEFT JOIN attentionAnchor d on a.accountID = d.anchorAccountID
+        where a.isValid = #{isValid} and b.isValid = #{isValid} and c.isValid = #{isValid} and d.isValid = #{isValid}
+        <if test="anchorStatus != null"> and a.status = #{anchorStatus} </if>
+        <if test="mobile != null"> and a.mobile = #{mobile} </if>
+        <if test="cityName != null">and <![CDATA[ b.cityName like '%${cityName}%']]></if>
+        group by d.anchorAccountID ) b
+    </select>
+
+    <!--主播信息审核-->
+    <update id="submitAuditAccountInfo" parameterType="java.util.Map">
+        UPDATE accountInfo
+        <set>
+            <if test="status != null"> status = #{status}, </if>
+            <if test="reason != null"> reason = #{reason}, </if>
+            updateTime = #{updateTime}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!--查询举报列表-->
+    <select id="getAccusationInfoList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.entity.AccusationRecordInfo">
+        select a.id,a.accountID,c.nickName as reportName,b.idCard,b.status,a.beAccountID,b.nickName as beReportName,a.accusationContent,
+        FROM_UNIXTIME(a.accusationTime,'%Y-%m-%d %H:%i:%s') as accusationTime,FROM_UNIXTIME(a.createTime,'%Y-%m-%d %H:%i:%s') as createTime
+        from accusationRecord a
+        left join accountInfo b on a.beAccountID=b.accountID
+        left join listenerAccountInfo c on c.accountID=a.accountID
+        where a.isValid = #{isValid} and b.isValid = #{isValid} and c.isValid = #{isValid} and b.isVoice=1
+        <if test="reportName != null">and <![CDATA[ b.nickName like '%${reportName}%']]></if>
+        <if test="beReportName != null">and <![CDATA[ c.nickName like '%${beReportName}%']]></if>
+        <if test="idCard != null">and <![CDATA[ b.idCard like '%${idCard}%']]></if>
+        ORDER by a.createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--查询举报列表总数-->
+    <select id="getAccusationInfoNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(a.id)
+        from accusationRecord a
+        left join accountInfo b on a.accountID=b.accountID
+        left join listenerAccountInfo c on c.accountID=a.beAccountID
+        where a.isValid = #{isValid} and b.isValid = #{isValid} and c.isValid = #{isValid}
+        <if test="reportName != null">and <![CDATA[ b.nickName like '%${reportName}%']]></if>
+        <if test="beReportName != null">and <![CDATA[ c.nickName like '%${beReportName}%']]></if>
+    </select>
+
+    <!--添加禁播记录-->
+    <insert id="addNoPlay" parameterType="java.util.Map">
+        insert into noPlay(accountID,formerStatus,noPlayTime,duration,reason,createTime,updateTime,isValid)
+        values(#{accountID},#{formerStatus},#{noPlayTime},#{duration},#{reason},#{createTime},#{updateTime},#{isValid})
+    </insert>
+
+    <!--更新主播的状态-->
+    <update id="updateAccountInfoOfIsVoice" parameterType="java.util.Map">
+        UPDATE accountInfo
+        <set>
+            <if test="isVoice != null">isVoice=#{isVoice}</if>
+        </set>
+        WHERE accountID=#{accountID}
+    </update>
+
+    <!--查询申诉列表-->
+    <select id="getAppealInfoList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.entity.AppealInfo">
+        select a.id,a.accountID,b.idCard,b.nickName as complainantName,a.reason,FROM_UNIXTIME(a.createTime,'%Y-%m-%d %H:%i:%s') as createTime from appeal a
+        left join accountInfo b on a.accountID = b.accountID
+        where a.isValid = #{isValid} and b.isValid = #{isValid} and b.isVoice=0
+        <if test="appealName != null">and <![CDATA[b.nickName  like '%${appealName}%']]></if>
+        <if test="idCard != null">and b.idCard = #{idCard}</if>
+        ORDER by a.createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--查询申诉人数-->
+    <select id="getAppealInfoNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(a.id) from appeal a
+        left join accountInfo b on a.accountID = b.accountID
+        where a.isValid = #{isValid} and b.isValid = #{isValid} and b.isVoice=0
+        <if test="appealName != null">and <![CDATA[b.nickName  like '%${appealName}%']]></if>
+        <if test="idCard != null">and b.idCard = #{idCard}</if>
+    </select>
+
+    <select id="getNoPlayList" resultType="me.daoke.renrenfm.entity.NoPlay">
+        select a.accountID,a.formerStatus,FROM_UNIXTIME(a.noPlayTime,'%Y-%m-%d %H:%i:%s') as noPlayTime,a.duration from noPlay a
+        left join accountInfo b on a.accountID=b.accountID
+        where b.isVoice=0;
+    </select>
+
+    <!--添加解禁数据-->
+    <insert id="addRelievePlay" parameterType="java.util.Map">
+        insert into relievePlay(accountID,type,reason,createTime,updateTime,isValid)
+        values(#{accountID},#{type},#{reason},#{createTime},#{updateTime},#{isValid})
+    </insert>
+
+    <!--更新主播的状态(解禁)-->
+    <update id="updateAccountInfoOfStatus" parameterType="java.util.Map" >
+        UPDATE accountInfo
+        <set>
+            <if test="status != null">status=#{status},</if>
+            <if test="isVoice != null">isVoice=#{isVoice}</if>
+        </set>
+        WHERE accountID=#{accountID}
+    </update>
+
+    <!--查询禁播前的状态-->
+    <select id="getNoPlayOfFormerStatus" parameterType="java.util.Map" resultType="java.lang.String">
+        select formerStatus from noPlay where accountID = #{accountID};
+    </select>
+
+    <!--人人播查询当前天、周、月新增的用户数
+    <select id="getNewRegisteredUserRrb" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from accountInfo
+        <set>
+            <if test="#{key} == 'day'.toString()">
+                where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),now()) = 0;
+                where DAYOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = DAYOFYEAR(now());
+            </if>
+            <if test="#{key} == 'week'.toString()">
+                where createTime between DATE_SUB(now(),INTERVAL WEEKDAY(now()) day) and DATE_ADD(now(), interval 6 day);
+                where WEEKOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = WEEKOFYEAR(now());
+            </if>
+            <if test="#{key} == 'month'.toString()">
+                where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),now()) = 0;
+                where MONTH(FROM_UNIXTIME(createTime,'%y-%m-%d')) = MONTH(now());
+            </if>
+        </set>
+    </select>-->
+
+    <!--人人播查询当前天新增的用户数（天）-->
+    <select id="getNewRegisteredUserRrbDay" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from accountInfo where DAYOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = DAYOFYEAR(now());
+    </select>
+
+    <!--人人播查询当前天新增的用户数（周）-->
+    <select id="getNewRegisteredUserRrbWeek" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from accountInfo where WEEKOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = WEEKOFYEAR(now());
+    </select>
+
+    <!--人人播查询当前天新增的用户数(月)-->
+    <select id="getNewRegisteredUserRrbMonth" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from accountInfo where MONTH(FROM_UNIXTIME(createTime,'%y-%m-%d')) = MONTH(now());
+    </select>
+
+    <!--FM查询当前天、周、月新增的用户数
+    <select id="getNewRegisteredUserFm" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from listenerAccountInfo
+        <set>
+            <if test="#{key} == 'day'.toString()">
+                where DATEDIFF(FROM_UNIXTIME(createTime, '%Y-%m-%d'),now()) = 0;
+                where DAYOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = DAYOFYEAR(now());
+            </if>
+            <if test="#{key} == 'week'.toString()">
+                where createTime between DATE_SUB(now(),INTERVAL WEEKDAY(now()) day) and DATE_ADD(now(), interval 6 day);
+                where WEEKOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = WEEKOFYEAR(now());
+            </if>
+            <if test="#{key} == 'month'.toString()">
+                where STRCMP(FROM_UNIXTIME(createTime, '%Y-%m'),now()) = 0;
+                where MONTH(FROM_UNIXTIME(createTime,'%y-%m-%d')) = MONTH(now());
+            </if>
+        </set>
+    </select>-->
+
+    <!--FM查询当前天、周、月新增的用户数(天)-->
+    <select id="getNewRegisteredUserFmDay" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from listenerAccountInfo where DAYOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = DAYOFYEAR(now());
+    </select>
+
+    <!--FM查询当前天、周、月新增的用户数(周)-->
+    <select id="getNewRegisteredUserFmWeek" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from listenerAccountInfo where WEEKOFYEAR(FROM_UNIXTIME(createTime,'%y-%m-%d')) = WEEKOFYEAR(now());
+    </select>
+
+    <!--FM查询当前天、周、月新增的用户数（月）-->
+    <select id="getNewRegisteredUserFmMonth" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from listenerAccountInfo where MONTH(FROM_UNIXTIME(createTime,'%y-%m-%d')) = MONTH(now());
+    </select>
+
+    <!--人人播查询总用户-->
+    <select id="getOverallUserRrb" resultType="java.lang.Integer">
+        select count(*) from accountInfo;
+    </select>
+
+    <!--FM查询总用户-->
+    <select id="getOverallUserFm" resultType="java.lang.Integer">
+        select count(*) from listenerAccountInfo;
+    </select>
+
+    <!--查询所有主播发送消息-->
+    <select id="getSendMessage" resultType="java.lang.Integer">
+        select count(*) from sendInfo where type=1 and isValid=1
+    </select>
+
+    <!--查询所有主播转发的信息(微密语音)-->
+    <select id="getForwardMessageWeme" resultType="java.lang.Integer">
+        SELECT count(*) from sendInfo where type=0 and isValid=1
+    </select>
+
+    <!--查询所有主播转发的信息(FM语音)-->
+    <select id="getForwardMessageFm" resultType="java.lang.Integer">
+        SELECT count(*) from replayListenerInfo
+    </select>
+
+    <!--查询所有主播粉丝回复数-->
+    <select id="getFansReply" resultType="java.lang.Integer">
+        SELECT count(*) from listenerReplyMsg where isvalid=1
+    </select>
+
+    <!--查询所有主播粉丝留存-->
+    <select id="getFansRetention" resultType="java.lang.Integer">
+        select count(*) from (
+            select count(a.senderAccountID) from listenerReceiveVoice a
+            left join listenerAccountInfo b on a.senderAccountID=b.accountID
+            where b.isValid=1 and a.isValid=1 and FROM_UNIXTIME(a.createTime,'%Y%m%d') BETWEEN DATE_SUB(curdate(),INTERVAL 3 DAY) and curdate()
+            group by b.accountID) a
+    </select>
+
+    <!--查询所有主播覆盖人次-->
+    <select id="getCoverPeople" resultType="java.lang.Integer">
+        select count(*) from sendCount;
+    </select>
+
+    <!--查询所有主播播出时长-->
+    <select id="getBroadcastTime" resultType="java.lang.Integer">
+        select sum(voiceTime) from sendInfo;
+    </select>
+
+    <!--查询所有主播播报热门城市-->
+    <select id="getBroadcastPopularCities" resultType="java.lang.Integer">
+        select count(*) from attentionCity;
+    </select>
+
+    <!--查询单个主播数据统计数据-->
+    <!--查询的字段解释：主键ID，主播的accountID，主播的真实姓名，人气数，财富值，身份证号，财富值和发送数和粉丝数的和，手机号，粉丝数，覆盖人次，微密转发消息，FM转发消息，回复数，发送消息，播出时长，排名-->
+    <select id="getSingleAnchorList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.vo.SingleAnchor">
+        select * from (
+        select pp.*,@rank:=@rank+1 as ranking from (select aa.id,aa.isValid,aa.accountID,aa.anchorName,aa.popNum,aa.wealthVal,aa.idCard,ii.totalData,aa.mobile,bb.fanNum,cc.coverPerson,dd.foMeWemeNum,ee.foMeFmNum,ff.replyNum,kk.fansRetention,gg.sendMessageNum,hh.broadcastTime
+        from (select a.id,a.accountID,a.nickName as anchorName,b.popularityVal as popNum,b.wealthVal,a.isValid,a.idCard,a.mobile from accountInfo a,myWallet b
+        where a.accountID=b.accountID and b.isValid=1) aa
+        left join (select a.accountID,count(b.id) as fanNum from accountInfo a,attentionAnchor b where a.accountID = b.anchorAccountID
+        and a.isValid=1 and b.isValid=1 group by b.anchorAccountID) bb on aa.accountID=bb.accountID
+        left join (select a.accountID,sum(b.sendCount) as coverPerson from accountInfo a,sendCount b
+        where a.accountID=b.accountID and a.isValid=1 group by b.accountID) cc on aa.accountID=cc.accountID
+        left join (SELECT a.accountID,count(b.id) as foMeWemeNum from accountInfo a,sendInfo b
+        where a.accountID=b.accountID and b.type=0 and b.isValid=1 and a.isValid=1 group by b.accountID) dd on aa.accountID=dd.accountID
+        left join (SELECT a.accountID,count(b.id) as foMeFmNum from accountInfo a,replayListenerInfo b
+        where a.accountID=b.accountID and a.isValid=1 group by b.accountID) ee on aa.accountID=ee.accountID
+        left join (SELECT a.accountID,count(b.id) as replyNum from accountInfo a,listenerReplyMsg b
+        where a.accountID=b.senderAccountID and a.isValid=1 and b.isValid=1 group by b.senderAccountID) ff on aa.accountID=ff.accountID
+        left join (SELECT a.accountID,count(b.id) as sendMessageNum from accountInfo a,sendInfo b
+        where a.accountID=b.accountID and a.isValid=1 and b.type=1 and b.app=1 and b.isValid=1 group by b.accountID) gg on aa.accountID=gg.accountID
+        left join (SELECT a.accountID,sum(b.voiceTime) as broadcastTime from accountInfo a,sendInfo b
+        where a.accountID=b.accountID and a.isValid=1 and b.app=1 and b.isValid=1 group by b.accountID) hh on aa.accountID=hh.accountID
+        left join (select ifnull(sum(b.wealthVal+c.num+d.num),0) as totalData,a.accountID from accountInfo a
+        left join (select ifnull(b.wealthVal,0) as wealthVal,a.accountID from accountInfo a
+        left join myWallet b on a.accountID=b.accountID
+        where a.isValid=1
+        ) b on a.accountID=b.accountID
+        left join (select ifnull(count(b.id),0) as num,a.accountID from accountInfo a
+        left join  attentionAnchor b on  a.accountID=b.anchorAccountID
+        where a.isValid=1  group by a.accountID
+        ) c on a.accountID=c.accountID
+        left join (select ifnull(count(b.id),0) as num,a.accountID from accountInfo a
+        left join  sendInfo b on  a.accountID=b.accountID
+        where a.isValid=1
+        group by a.accountID
+        ) d on a.accountID=d.accountID group by a.accountID
+        ) ii on aa.accountID=ii.accountID
+        left join (select count(bb.accountIdNum) as fansRetention,aa.accountID from accountInfo aa
+        left join (select count(a.senderAccountID) as accountIdNum,a.receiveAccountID from listenerReceiveVoice a
+        left join listenerAccountInfo b on a.senderAccountID=b.accountID
+        where b.isValid=1 and a.isValid=1 and FROM_UNIXTIME(a.createTime,'%Y%m%d') BETWEEN DATE_SUB(curdate(),INTERVAL 3 DAY) and curdate()
+        group by b.accountID) bb on aa.accountID=bb.receiveAccountID
+        where aa.isValid=1 group by aa.accountID
+        ) kk on aa.accountID=kk.accountID
+        where aa.isValid=1
+        order by ii.totalData desc
+        ) pp,(SELECT @rank:=0) B
+        ) tt
+        where tt.isValid=1
+        <if test="anchorName != null"> and <![CDATA[ tt.anchorName like '%${anchorName}%']]></if>
+        <if test="idCard != null"> and tt.idCard = #{idCard} </if>
+        <if test="mobile != null"> and tt.mobile = #{mobile} </if>
+        limit #{startPlace},#{size}
+    </select>
+
+    <!--查询单个主播数据统计总数-->
+    <select id="getSingleAnchorNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (
+        select pp.*,@rank:=@rank+1 as ranking from (select aa.id,aa.isValid,aa.accountID,aa.anchorName,aa.popNum,aa.wealthVal,aa.idCard,ii.totalData,aa.mobile,bb.fanNum,cc.coverPerson,dd.foMeWemeNum,ee.foMeFmNum,ff.replyNum,kk.fansRetention,gg.sendMessageNum,hh.broadcastTime
+        from (select a.id,a.accountID,a.nickName as anchorName,b.popularityVal as popNum,b.wealthVal,a.isValid,a.idCard,a.mobile from accountInfo a,myWallet b
+        where a.accountID=b.accountID and b.isValid=1) aa
+        left join (select a.accountID,count(b.id) as fanNum from accountInfo a,attentionAnchor b where a.accountID = b.anchorAccountID
+        and a.isValid=1 and b.isValid=1 group by b.anchorAccountID) bb on aa.accountID=bb.accountID
+        left join (select a.accountID,sum(b.sendCount) as coverPerson from accountInfo a,sendCount b
+        where a.accountID=b.accountID and a.isValid=1 group by b.accountID) cc on aa.accountID=cc.accountID
+        left join (SELECT a.accountID,count(b.id) as foMeWemeNum from accountInfo a,sendInfo b
+        where a.accountID=b.accountID and b.type=0 and b.isValid=1 and a.isValid=1 group by b.accountID) dd on aa.accountID=dd.accountID
+        left join (SELECT a.accountID,count(b.id) as foMeFmNum from accountInfo a,replayListenerInfo b
+        where a.accountID=b.accountID and a.isValid=1 group by b.accountID) ee on aa.accountID=ee.accountID
+        left join (SELECT a.accountID,count(b.id) as replyNum from accountInfo a,listenerReplyMsg b
+        where a.accountID=b.senderAccountID and a.isValid=1 and b.isValid=1 group by b.senderAccountID) ff on aa.accountID=ff.accountID
+        left join (SELECT a.accountID,count(b.id) as sendMessageNum from accountInfo a,sendInfo b
+        where a.accountID=b.accountID and a.isValid=1 and b.type=1 and b.app=1 and b.isValid=1 group by b.accountID) gg on aa.accountID=gg.accountID
+        left join (SELECT a.accountID,sum(b.voiceTime) as broadcastTime from accountInfo a,sendInfo b
+        where a.accountID=b.accountID and a.isValid=1 and b.app=1 and b.isValid=1 group by b.accountID) hh on aa.accountID=hh.accountID
+        left join (select ifnull(sum(b.wealthVal+c.num+d.num),0) as totalData,a.accountID from accountInfo a
+        left join (select ifnull(b.wealthVal,0) as wealthVal,a.accountID from accountInfo a
+        left join myWallet b on a.accountID=b.accountID
+        where a.isValid=1
+        ) b on a.accountID=b.accountID
+        left join (select ifnull(count(b.id),0) as num,a.accountID from accountInfo a
+        left join  attentionAnchor b on  a.accountID=b.anchorAccountID
+        where a.isValid=1  group by a.accountID
+        ) c on a.accountID=c.accountID
+        left join (select ifnull(count(b.id),0) as num,a.accountID from accountInfo a
+        left join  sendInfo b on  a.accountID=b.accountID
+        where a.isValid=1
+        group by a.accountID
+        ) d on a.accountID=d.accountID group by a.accountID
+        ) ii on aa.accountID=ii.accountID
+        left join (select count(bb.accountIdNum) as fansRetention,aa.accountID from accountInfo aa
+        left join (select count(a.senderAccountID) as accountIdNum,a.receiveAccountID from listenerReceiveVoice a
+        left join listenerAccountInfo b on a.senderAccountID=b.accountID
+        where b.isValid=1 and a.isValid=1 and FROM_UNIXTIME(a.createTime,'%Y%m%d') BETWEEN DATE_SUB(curdate(),INTERVAL 3 DAY) and curdate()
+        group by b.accountID) bb on aa.accountID=bb.receiveAccountID
+        where aa.isValid=1 group by aa.accountID
+        ) kk on aa.accountID=kk.accountID
+        where aa.isValid=1
+        order by ii.totalData desc
+        ) pp,(SELECT @rank:=0) B
+        ) tt
+        where tt.isValid=1
+        <if test="anchorName != null"> and <![CDATA[ tt.anchorName like '%${anchorName}%']]></if>
+        <if test="idCard != null"> and tt.idCard = #{idCard} </if>
+        <if test="mobile != null"> and tt.mobile = #{mobile} </if>
+    </select>
+
+    <!--查询主播的财富值 zym-->
+    <select id="getAnchorWealthVal" parameterType="java.util.Map" resultType="java.util.Map">
+        select ifnull(b.wealthVal,0) as wealthVal,a.accountID from accountInfo a
+        left join myWallet b on a.accountID=b.accountID
+        where a.isValid=1
+        <if test="anchorName != null">and <![CDATA[ a.anchorName like '%${anchorName}%']]></if>
+        <if test="idCard != null"> and a.idCard = #{idCard} </if>
+        <if test="mobile != null"> and a.mobile = #{mobile} </if>
+    </select>
+
+    <!--查询主播的粉丝数数 zym-->
+    <select id="getAnchorFanNum" parameterType="java.util.Map" resultType="java.util.Map">
+        select ifnull(count(b.id),0) as num,a.accountID from accountInfo a
+        left join  attentionAnchor b on  a.accountID=b.anchorAccountID
+        where a.isValid=1
+        <if test="anchorName != null">and <![CDATA[ a.anchorName like '%${anchorName}%']]></if>
+        <if test="idCard != null"> and a.idCard = #{idCard} </if>
+        <if test="mobile != null"> and a.mobile = #{mobile} </if>
+        group by a.accountID
+    </select>
+
+    <!--查询主播发送的消息 zym-->
+    <select id="getAnchorSdMeNum" parameterType="java.util.Map" resultType="java.util.Map">
+        select ifnull(count(b.id),0) as num,a.accountID from accountInfo a
+        left join  sendInfo b on  a.accountID=b.accountID
+        where a.isValid=1
+        <if test="anchorName != null">and <![CDATA[ a.anchorName like '%${anchorName}%']]></if>
+        <if test="idCard != null"> and a.idCard = #{idCard} </if>
+        <if test="mobile != null"> and a.mobile = #{mobile} </if>
+        group by a.accountID
+    </select>
+
+    <!--根据主播ID查询最新添加粉丝排名的唯一标识码-->
+    <select id="getLatelyTime" parameterType="java.util.Map" resultType="java.lang.String">
+        select uniqueCode from rewardRanking where
+        <if test="accountID != null"> anchorAccountID = #{accountID} </if>
+        order by createTime desc limit 1;
+    </select>
+
+    <!--根据主播accountID获取最新粉丝排名信息-->
+    <select id="getFansRanking" parameterType="java.util.Map" resultType="java.util.Map">
+        select a.id,b.nickName,b.headPic,a.denseNum,a.ranking from rewardRanking a
+        left join listenerAccountInfo b on a.listenerAccountID=b.accountID
+        where a.isValid=1 and b.isValid=1
+        <if test="uniqueCode != null">and a.uniqueCode = #{uniqueCode} </if>
+        <if test="accountID != null"> and a.anchorAccountID = #{accountID} </if>
+    </select>
+
+    <!--根据主播accountID获取主播获取的礼物信息-->
+    <select id="getPresentOfAccountID" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT ifnull(count(a.id),0) as num,c.name,c.icon,c.id from rewardRecord a,accountInfo b,presentInfo c
+        where a.anchoraccountID=b.accountID and a.presentinfoID=c.id and a.isValid=1
+        <if test="accountID != null">and b.accountID=#{accountID} </if>
+        GROUP BY anchorAccountID,presentInfoID
+        ORDER by c.createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--根据主播accountID获取主播获取的礼物信息数量-->
+    <select id="getPresentOfAccountIDNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT count(*)
+        from ( SELECT ifnull(sum(a.densenum),0) as num,c.name,c.icon,c.id from rewardRecord a,accountInfo b,presentInfo c
+        where a.anchoraccountID=b.accountID and a.presentinfoID=c.id and a.isValid=1
+        <if test="accountID != null">and b.accountID=#{accountID} </if>
+        GROUP BY anchorAccountID,presentInfoID) aa
+    </select>
+
+    <!-- 查询单个粉丝的数据统计 -->
+    <!-- 查询字段解释：主键id，昵称，听众的accountID，手机号，收听主播语音条数，收听系统语音条数，回复数，打赏总金额 -->
+    <select id="getFansSingleList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.vo.FansSingle">
+        select aa.id,aa.nickName,aa.accountID,aa.mobile,bb.voiceAnchorNum,cc.voiceSystemNum,dd.replyNum,ee.moneyNum from  listenerAccountInfo aa
+        left join
+        (select ifnull(count(b.senderAccountID),0) as voiceAnchorNum,a.accountID from listenerAccountInfo a
+        left join listenerReceiveVoice b on a.accountID= b.receiveAccountID where b.type=1 group by a.accountID) bb on aa.accountID=bb.accountID
+        left join
+        (select ifnull(count(b.imei),0) as voiceSystemNum,a.accountID from listenerAccountInfo a
+        left join listenerReceiveVoice b on a.accountID= b.receiveAccountID where b.type=0 group by a.accountID) cc on aa.accountID=cc.accountID
+        left join
+        (select ifnull(count(b.receiveAccountID),0) as replyNum,a.accountID from listenerAccountInfo a
+        left join listenerReplyMsg b on a.accountID=b.senderAccountID group by a.accountID) dd on aa.accountID=dd.accountID
+        left join
+        (select ifnull(sum(b.denseNum),0) as moneyNum,a.accountID from listenerAccountInfo a
+        left join rewardRecord b on a.accountID=b.listenerAccountID group by a.accountID) ee on aa.accountID=ee.accountID
+        where aa.isValid=1
+        <if test="nickName != null"> and aa.nickName=#{nickName} </if>
+        <if test="mobile != null"> and aa.mobile=#{mobile} </if>
+        order by ee.moneyNum desc
+        limit #{startPlace},#{size}
+    </select>
+
+    <!-- 查询单个粉丝的数据统计条数 -->
+    <select id="getFansSingleListNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from (
+        select aa.id,aa.nickName,aa.accountID,aa.mobile,bb.voiceAnchorNum,cc.voiceSystemNum,dd.replyNum,ee.moneyNum from  listenerAccountInfo aa
+        left join
+        (select ifnull(count(b.senderAccountID),0) as voiceAnchorNum,a.accountID from listenerAccountInfo a
+        left join listenerReceiveVoice b on a.accountID= b.receiveAccountID group by a.accountID) bb on aa.accountID=bb.accountID
+        left join
+        (select ifnull(count(b.imei),0) as voiceSystemNum,a.accountID from listenerAccountInfo a
+        left join listenerReceiveVoice b on a.accountID= b.receiveAccountID group by a.accountID) cc on aa.accountID=cc.accountID
+        left join
+        (select ifnull(count(b.receiveAccountID),0) as replyNum,a.accountID from listenerAccountInfo a
+        left join listenerReplyMsg b on a.accountID=b.senderAccountID group by a.accountID) dd on aa.accountID=dd.accountID
+        left join
+        (select ifnull(sum(b.denseNum),0) as moneyNum,a.accountID from listenerAccountInfo a
+        left join rewardRecord b on a.accountID=b.listenerAccountID group by a.accountID) ee on aa.accountID=ee.accountID
+        where aa.isValid=1
+        <if test="accountID != null"> and aa.accountID=#{accountID} </if>
+        <if test="mobile != null"> and aa.mobile=#{mobile} </if>
+        order by ee.moneyNum desc
+        ) a
+    </select>
+
+    <!--根据听众的accountID查询打赏的礼物信息-->
+    <select id="rewardPresentOfAccountID" parameterType="java.util.Map" resultType="java.util.Map">
+        select ifnull(sum(b.densenum),0) as moneyNum,c.name,c.icon,c.id,count(b.id) as num from  listenerAccountInfo a
+        left join rewardRecord b on a.accountID=b.listenerAccountID
+        left join presentInfo c on c.id=b.presentinfoID
+        where a.isValid=1
+        <if test="accountID != null">and a.accountID=#{accountID} </if>
+        group by b.anchorAccountID
+        ORDER by c.createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--根据听众的accountID查询打赏的礼物信息数量-->
+    <select id="rewardPresentOfAccountIDNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT count(*)
+        from (select ifnull(sum(b.densenum),0) as moneyNum,c.name,c.icon,c.id,count(b.id) as num from  listenerAccountInfo a
+        left join rewardRecord b on a.accountID=b.listenerAccountID
+        left join presentInfo c on c.id=b.presentinfoID
+        where a.isValid=1
+        <if test="accountID != null">and a.accountID=#{accountID} </if>
+        group by b.anchorAccountID) aa
+    </select>
+
+    <!--根据听众的accountID查询打赏的金额排名（前十）-->
+    <select id="rewardRankingOfAccountID" parameterType="java.util.Map" resultType="java.util.Map">
+        select a.id,b.nickName,b.headPic,sum(denseNum) as denseNum from rewardRecord a
+        left join  accountInfo b on a.anchorAccountID=b.accountID
+        where a.isValid=1 and b.isValid=1
+        <if test="accountID != null"> and a.listenerAccountID=#{accountID} </if>
+        group by a.anchorAccountID order by denseNum desc limit 0,10
+    </select>
+
+    <!--查询所有听众回复的信息和-->
+    <select id="getReplyNum" resultType="java.lang.Integer">
+        select count(id) from listenerReplyMsg
+    </select>
+
+    <!--查询所有听众打赏的金额总数-->
+    <select id="getRewardMoney" resultType="java.lang.Integer">
+        select sum(denseNum) from rewardRecord where isValid=1
+    </select>
+
+    <!--查询开箱数-->
+    <select id="getOutOfBoxNum" resultType="java.lang.Integer">
+        select count(id) from listenerOrder where status=1 and isValid=1
+    </select>
+
+    <!--查询礼品领取数
+    <select id="getPresentReceiveNum" resultType="java.lang.Integer">
+        select count(id) from listenerOrder where status=1 and isValid=1;
+    </select>-->
+
+    <!--查询礼品领取率
+    <select id="getPresentReceiveRate" resultType="java.lang.Integer">
+        select count(id) from listenerOrder where status=1 and isValid=1;
+    </select>-->
+
+    <!--查询开箱领取数
+    <select id="getOutOfBoxReceiveNum" resultType="java.lang.Integer">
+        select count(id) from listenerOrder where status=1 and isValid=1;
+    </select>-->
+
+    <!--查询开箱领取率
+    <select id="getOutOfBoxReceiveRate" resultType="java.lang.Integer">
+        select count(id) from listenerOrder where status=1 and isValid=1;
+    </select>-->
+
+    <!--查询送主播数-->
+    <select id="getSendAnchorNum" resultType="java.lang.Integer">
+        select count(id) from listenerOrder where cancelType=2
+    </select>
+
+    <!--查询发货订单数-->
+    <select id="getDeliveryOrderNum" resultType="java.lang.Integer">
+        select count(id) from listenerOrder where sendStatus=2
+    </select>
+
+    <!--礼物数据统计-->
+    <select id="presentDataCount" parameterType="java.util.Map" resultType="java.util.Map">
+        select * from ( select tt.*, @rank:=@rank+1 as ranking from (
+        select b.id,a.isValid,b.name,b.icon,count(a.presentInfoID) as num,sum(a.denseNum) as totalAmount from rewardRecord a
+        left join presentInfo b on a.presentInfoID=b.id
+        group by a.presentInfoID order by num desc
+        ) tt,(SELECT @rank:=0) B ) aa
+        where aa.isValid=1
+        <if test="name != null">and <![CDATA[aa.name  like '%${name}%']]></if>
+        limit #{startPlace},#{size}
+    </select>
+
+    <!--礼物的数据统计数量-->
+    <select id="presentDataCountNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from ( select tt.*, @rank:=@rank+1 as ranking from (
+        select b.id,a.isValid,b.name,b.icon,count(a.presentInfoID) as num,sum(a.denseNum) as totalAmount from rewardRecord a
+        left join presentInfo b on a.presentInfoID=b.id
+        group by a.presentInfoID order by num desc
+        ) tt,(SELECT @rank:=0) B ) aa
+        where aa.isValid=1
+        <if test="name != null">and <![CDATA[aa.name  like '%${name}%']]></if>
+    </select>
+
+    <!--礼品领取数据统计-->
+    <select id="presentReceiveCount" parameterType="java.util.Map" resultType="java.util.Map">
+        select a.id,a.name,a.icon,ifnull(b.receiveNum,0) as receiveNum,ifnull(c.receiveRate/b.receiveNum,0) as rate from prizeInfo a
+        left join (select prizeID,ifnull(count(prizeID),0) as receiveNum from listenerOrder where isValid=1 group by  prizeID) b on a.id=b.prizeID
+        left join (select prizeID,ifnull(count(prizeID),0) as receiveRate from listenerOrder where isValid=1 and status=1 group by  prizeID) c on a.id=c.prizeID
+        where a.isValid=1
+        <if test="name != null">and <![CDATA[a.name  like '%${name}%']]></if>
+        limit #{startPlace},#{size}
+    </select>
+
+    <!--礼品领取数据统计数量-->
+    <select id="presentReceiveCountNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(a.id) from (
+        select a.id,a.name,a.icon,ifnull(b.receiveNum,0) as receiveNum,ifnull(c.receiveRate/b.receiveNum,0) as rate from prizeInfo a
+        left join (select prizeID,ifnull(count(prizeID),0) as receiveNum from listenerOrder where isValid=1 group by  prizeID) b on a.id=b.prizeID
+        left join (select prizeID,ifnull(count(prizeID),0) as receiveRate from listenerOrder where isValid=1 and status=1 group by  prizeID) c on a.id=c.prizeID
+        where a.isValid=1
+        <if test="name != null">and <![CDATA[a.name  like '%${name}%']]></if>
+        ) a
+    </select>
+
+    <!--开箱领取数据统计-->
+    <select id="openBoxReceiveCount" parameterType="java.util.Map" resultType="java.util.Map">
+        select a.id,a.boxName,a.boxImg,ifnull(b.receiveNum,0) as receiveNum,ifnull(c.receiveRate/b.receiveNum,0) as rate from prizeBox a
+        left join (select boxID,ifnull(count(boxID),0) as receiveNum from listenerOrder where isValid=1 group by  boxID) b on a.id=b.boxID
+        left join (select boxID,ifnull(count(boxID),0) as receiveRate from listenerOrder where isValid=1 and status=1 group by  boxID) c on a.id=c.boxID
+        where a.isValid=1
+        <if test="name != null">and <![CDATA[a.boxName  like '%${name}%']]></if>
+        limit #{startPlace},#{size}
+    </select>
+
+    <!--开箱领取数据统计数量-->
+    <select id="openBoxReceiveCountNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(a.id) from (
+        select a.id,a.boxName,a.boxImg,ifnull(b.receiveNum,0) as receiveNum,ifnull(c.receiveRate/b.receiveNum,0) as rate from prizeBox a
+        left join (select boxID,ifnull(count(boxID),0) as receiveNum from listenerOrder where isValid=1 group by  boxID) b on a.id=b.boxID
+        left join (select boxID,ifnull(count(boxID),0) as receiveRate from listenerOrder where isValid=1 and status=1 group by  boxID) c on a.id=c.boxID
+        where a.isValid=1
+        <if test="name != null">and <![CDATA[a.boxName  like '%${name}%']]></if>
+        ) a
+    </select>
+
+    <!--根据用户的id查询用户的accountID-->
+    <select id="getAccountIDInfoIsAccountID" parameterType="java.util.Map" resultType="java.lang.String">
+        select accountID from accountInfo where isValid=1 and id=#{id};
+    </select>
+
+    <!--根据听众用户的id查询听众用户的accountID-->
+    <select id="getListenerAccountIsAccountID" parameterType="java.util.Map" resultType="java.lang.String">
+        select accountID from listenerAccountInfo where isValid=1 and id=#{id};
+    </select>
+</mapper>

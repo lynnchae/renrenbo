@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--礼物信息presentInfo-->
+<mapper namespace="me.daoke.renrenfm.vo.PresentInfo">
+
+    <!--查詢presentInfo列表-->
+    <select id="getPresentInfoList" parameterType="java.util.Map" resultType="me.daoke.renrenfm.vo.PresentInfo">
+        SELECT id,name,icon,type,denseNum,diamond,popularityVal,frequencyNum,appearType,FROM_UNIXTIME(createTime,'%Y-%m-%d %H:%i:%s') as createTime
+        from presentInfo WHERE isValid=#{isValid}
+        <if test="name != null">and <![CDATA[ name like '%${name}%']]></if>
+        <if test="type != null">and type=#{type}</if>
+        <if test="appearType != null">and appearType=#{appearType}</if>
+        ORDER by createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--查詢presentInfo列表总数-->
+    <select id="getPresentInfoNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT count(id)
+        from presentInfo WHERE isValid=#{isValid}
+        <if test="name != null">and <![CDATA[ name like '%${name}%']]></if>
+        <if test="type != null">and type=#{type}</if>
+        <if test="appearType != null">and appearType=#{appearType}</if>
+    </select>
+
+    <!--修改presentInfo信息-->
+    <update id="updatePresentInfo" parameterType="java.util.Map">
+        UPDATE presentInfo
+        <set>
+            <if test="name != null">name=#{name},</if>
+            <if test="icon != null">icon=#{icon},</if>
+            <if test="type != null">type=#{type},</if>
+            <if test="denseNum != null">denseNum=#{denseNum},</if>
+            <if test="popularityVal != null">popularityVal=#{popularityVal},</if>
+            <if test="frequencyNum != null">frequencyNum=#{frequencyNum},</if>
+            <if test="appearType != null">appearType=#{appearType},</if>
+            <if test="isValid != null">isValid=#{isValid},</if>
+            <if test="updateTime != null">updateTime=#{updateTime}</if>
+        </set>
+        WHERE id=#{presentID}
+    </update>
+
+    <!--删除presentInfo信息-->
+    <update id="deletePresentInfo" parameterType="java.util.Map">
+        UPDATE presentInfo
+        SET isValid=#{isValid},updateTime=#{updateTime}
+        WHERE id in
+        <foreach item="item" index="index" collection="presentIDs"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!--添加礼物-->
+    <update id="addPresentInfo" parameterType="java.util.Map">
+        INSERT INTO presentInfo(name,icon,type,denseNum,diamond,createTime,updateTime,isValid,popularityVal,frequencyNum,appearType)
+        VALUES (#{name},#{icon},#{type},#{denseNum},#{diamond},#{createTime},#{updateTime},#{isValid},#{popularityVal},#{frequencyNum},#{appearType});
+    </update>
+
+</mapper>

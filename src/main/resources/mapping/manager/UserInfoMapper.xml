@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="me.daoke.renrenfm.vo.UserInfo">
+
+    <select id="queryUserInfo" parameterType="java.util.Map" resultType="me.daoke.renrenfm.vo.UserInfo">
+        SELECT id,userName,userPassword,sex FROM userInfo WHERE userName=#{userName} AND userPassword=#{userPassword} AND isValid=1;
+    </select>
+
+</mapper>

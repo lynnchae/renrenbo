@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="listenerOrder">
+
+    <!--查詢开箱记录-->
+    <select id="getListenerOrderList" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT o.id,l.nickName as listenerName,a.nickName as anchorName,pb.boxName,p.name as prizeName,
+        o.status,o.cancelType,FROM_UNIXTIME(o.createTime,'%Y-%m-%d %H:%i:%s') as createTime,o.shoppingAddressID
+        from listenerOrder o
+        LEFT JOIN prizeBox pb on pb.id = o.boxID
+        LEFT JOIN prizeInfo p on p.id = o.prizeID
+        LEFT JOIN listenerAccountInfo l on l.accountID = o.listenerAccountID
+        LEFT JOIN accountInfo a on a.accountID = o.anchorAccountID
+        where o.isValid = #{isValid}
+        <if test="boxName != null">and <![CDATA[ pb.boxName like '%${boxName}%']]></if>
+        <if test="prizeName != null">and <![CDATA[ p.name like '%${prizeName}%']]></if>
+        <if test="status != null">and o.status=#{status}</if>
+        <if test="cancelType != null">and o.cancelType=#{cancelType}</if>
+        ORDER BY o.createTime desc  limit #{startPlace},#{size}
+    </select>
+
+    <!--查詢开箱记录总数-->
+    <select id="getListenerOrderNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT count(*)
+        from listenerOrder o
+        LEFT JOIN prizeBox pb on pb.id = o.boxID
+        LEFT JOIN prizeInfo p on p.id = o.prizeID
+        LEFT JOIN listenerAccountInfo l on l.accountID = o.listenerAccountID
+        LEFT JOIN accountInfo a on a.accountID = o.anchorAccountID
+        where o.isValid = #{isValid}
+        <if test="boxName != null">and <![CDATA[ pb.boxName like '%${boxName}%']]></if>
+        <if test="prizeName != null">and <![CDATA[ p.name like '%${prizeName}%']]></if>
+        <if test="status != null">and o.status=#{status}</if>
+        <if test="cancelType != null">and o.cancelType=#{cancelType}</if>
+    </select>
+
+    <select id="queryOrderDetail" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT o.id,p.name,p.icon,o.sendCompany,o.sendNumber,o.sendStatus,o.shoppingAddressID,
+        s.recipientsName,s.recipientsMobile,s.provinceName,s.cityName,s.countyName,s.detailAddress,s.postcode
+        from listenerOrder o
+        LEFT JOIN shoppingAddress s on s.id = o.shoppingAddressID
+        LEFT JOIN prizeInfo p on p.id = o.prizeID
+        WHERE o.id = #{orderId}
+    </select>
+
+    <!--保存订单物流信息-->
+    <update id="saveSendMessage">
+        UPDATE listenerOrder SET sendCompany=#{sendCompany},sendNumber=#{sendNumber},sendStatus=#{sendStatus},updateTime=#{updateTime}
+        WHERE id=#{orderId}
+    </update>
+</mapper>

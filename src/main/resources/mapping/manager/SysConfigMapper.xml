@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--系统参数配置-->
+<mapper namespace="me.daoke.renrenfm.entity.SysConfig">
+
+    <!--查询指定类别的系统配置信息-->
+    <select id="queryConfirmSysConfig" parameterType="java.util.Map" resultType="me.daoke.renrenfm.entity.SysConfig">
+        select * from sysConfig where isValid = 1 and flag = #{flag} order by createTime desc limit 1
+    </select>
+
+    <update id="updateConfirmConfigByFlag" parameterType="java.util.Map">
+        UPDATE sysConfig SET updateTime=#{updateTime}
+        <if test="valOne != null">
+            ,valOne=#{valOne}
+        </if>
+        <if test="valTwo != null">
+            ,valTwo=#{valTwo},
+        </if>
+        WHERE flag = #{flag} AND isValid = #{isValid}
+    </update>
+</mapper>

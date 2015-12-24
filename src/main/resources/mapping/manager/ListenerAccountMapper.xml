@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="me.daoke.renrenfm.entity.ListenerAccountInfo">
+
+    <!--查詢听众列表-->
+    <select id="getAllListener" parameterType="java.util.Map" resultType="me.daoke.renrenfm.entity.ListenerAccountInfo">
+        SELECT accountID,sex,headPic,nickName,denseNum,carType,carNo,FROM_UNIXTIME(createTime,'%Y-%m-%d %H:%i:%s') as createTime
+        from listenerAccountInfo
+        WHERE isValid = #{isValid}
+        <if test="nickName != null">and <![CDATA[ nickName like '%${nickName}%']]></if>
+        ORDER BY createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--查詢听众总数-->
+    <select id="getAllListenerNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT count(*)
+        from listenerAccountInfo
+        WHERE isValid = #{isValid}
+        <if test="nickName != null">and <![CDATA[ nickName like '%${nickName}%']]></if>
+    </select>
+
+</mapper>

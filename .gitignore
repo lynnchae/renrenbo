@@ -1,0 +1,13 @@
+#ignore class files!
+
+*.class
+#ignore classpath and project files!
+*project
+*.classpath
+*iml
+*target
+*.settings
+*.idea
+*md5.txt
+*Hash_1.0.4.exe
+*exploded.xml

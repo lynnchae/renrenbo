@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="me.daoke.renrenfm.entity.Version">
+
+    <select id="getVersionFm" resultType="me.daoke.renrenfm.entity.Version">
+        SELECT * FROM version WHERE isValid=1 AND isUpToDate=1 AND appType=1
+    </select>
+
+    <select id="getVersionRrb" resultType="me.daoke.renrenfm.entity.Version">
+        SELECT * FROM version WHERE isValid=1 AND isUpToDate=1 AND appType=0
+    </select>
+
+    <!--更新FM版本信息-->
+    <update id="updateVersionFm" parameterType="java.util.Map">
+        UPDATE version
+        <set>
+            <if test="appKey == 0">
+                <if test="iosNumber != null"> iosNumber = #{iosNumber}, </if>
+                <if test="iosUpdateUrl != null"> iosUpdateUrl = #{iosUpdateUrl}, </if>
+            </if>
+            <if test="appKey == 1">
+                <if test="androidNumber != null"> androidNumber = #{androidNumber}, </if>
+                <if test="androidUpdateUrl != null"> androidUpdateUrl = #{androidUpdateUrl}, </if>
+            </if>
+            <if test="remark != null"> remark = #{remark}, </if>
+            <if test="isUpToDate != null"> isUpToDate = #{isUpToDate}, </if>
+            <if test="isForcedUpDate != null"> isForcedUpDate = #{isForcedUpDate}, </if>
+            updateTime = #{updateTime}
+        </set>
+        WHERE isValid=1 AND appType=1
+    </update>
+
+    <!--更新人人播版本信息-->
+    <update id="updateVersionRrb" parameterType="java.util.Map">
+        UPDATE version
+        <set>
+            <if test="appKey == 0">
+                <if test="iosNumber != null"> iosNumber = #{iosNumber}, </if>
+                <if test="iosUpdateUrl != null"> iosUpdateUrl = #{iosUpdateUrl}, </if>
+            </if>
+            <if test="appKey == 1">
+                <if test="androidNumber != null"> androidNumber = #{androidNumber}, </if>
+                <if test="androidUpdateUrl != null"> androidUpdateUrl = #{androidUpdateUrl}, </if>
+            </if>
+            <if test="remark != null"> remark = #{remark}, </if>
+            <if test="isUpToDate != null"> isUpToDate = #{isUpToDate}, </if>
+            <if test="isForcedUpDate != null"> isForcedUpDate = #{isForcedUpDate}, </if>
+            updateTime = #{updateTime}
+        </set>
+        WHERE isValid=1 AND appType=0
+    </update>
+
+</mapper>

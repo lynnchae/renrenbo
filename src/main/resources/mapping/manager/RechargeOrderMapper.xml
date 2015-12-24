@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="me.daoke.renrenfm.entity.RechargeOrder">
+
+    <!--查詢用户充值列表-->
+    <select id="getAllRechargeOrder" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT r.id,r.accountID,r.denseNum,r.totalMoney,r.orderNo,r.rechargeNum,r.orderStatus,r.type,l.mobile,
+        FROM_UNIXTIME(r.createTime,'%Y-%m-%d %H:%i:%s')  as createTime,l.nickName
+        FROM rechargeOrder r
+        LEFT JOIN listenerAccountInfo l on l.accountID = r.accountID
+        WHERE r.isValid = #{isValid} AND l.isValid = #{isValid}
+        <if test="rechargeNum != null"> and r.rechargeNum = #{rechargeNum} </if>
+        <if test="mobile != null"> and l.mobile = #{mobile} </if>
+        <if test="orderStatus != null"> and r.orderStatus = #{orderStatus} </if>
+        <if test="nickName != null">and <![CDATA[ l.nickName like '%${nickName}%']]></if>
+        ORDER BY r.createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--查詢用户充值总数-->
+    <select id="getAllRechargeOrderNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT count(*)
+        FROM rechargeOrder r
+        LEFT JOIN listenerAccountInfo l on l.accountID = r.accountID
+        WHERE r.isValid = #{isValid} AND l.isValid = #{isValid}
+        <if test="rechargeNum != null"> and r.rechargeNum = #{rechargeNum} </if>
+        <if test="mobile != null"> and l.mobile = #{mobile} </if>
+        <if test="orderStatus != null"> and r.orderStatus = #{orderStatus} </if>
+        <if test="nickName != null">and <![CDATA[ l.nickName like '%${nickName}%']]></if>
+    </select>
+
+    <!--查詢充值回调记录-->
+    <select id="getAllPayBackRecord" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT id,orderNo,tradeNo,tradeStatus,buyID,FROM_UNIXTIME(createTime,'%Y-%m-%d %H:%i:%s') as createTime
+        from alipayCallBackRecord
+        WHERE isValid = #{isValid}
+        <if test="orderNo != null"> and orderNo = #{orderNo} </if>
+        <if test="tradeStatus != null">and tradeStatus=#{tradeStatus}</if>
+        ORDER BY createTime DESC limit #{startPlace},#{size}
+    </select>
+
+    <!--查詢充值回调记录总数-->
+    <select id="getAllPayBackRecordNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        from alipayCallBackRecord
+        WHERE isValid = #{isValid}
+        <if test="orderNo != null"> and orderNo = #{orderNo} </if>
+        <if test="tradeStatus != null">and tradeStatus=#{tradeStatus}</if>
+    </select>
+</mapper>
